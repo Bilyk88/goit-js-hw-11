@@ -1,0 +1,12 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.info {
+    display: flex;
+}
