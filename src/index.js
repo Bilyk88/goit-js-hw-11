@@ -1,8 +1,13 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import axios from 'axios';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
 const gallery = document.querySelector('.gallery');
 const search = document.querySelector('.search-form');
 const target = document.querySelector('.js-guard');
+
+const photoGallery = new SimpleLightbox('.gallery a');
 
 const BASE_URL = 'https://pixabay.com/api/';
 const API_KEY = '41243043-03fa0c09f0e0133208ded241a';
@@ -11,7 +16,7 @@ let currentPage = 10;
 
 let options = {
   root: null,
-  rootMargin: "300px",
+  rootMargin: "500px",
   threshold: 1.0,
 };
 
@@ -24,7 +29,9 @@ function onLoad(entries, observer) {
     if (entry.isIntersecting) {
       currentPage += 1;
       getImages(searchQuery, currentPage).then(data => {
+
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+        photoGallery.refresh();
         console.log(data.totalHits / 40);
         console.log(currentPage);
         if (currentPage > data.totalHits / 40) {
@@ -36,45 +43,50 @@ function onLoad(entries, observer) {
   });
 }
 
-
 search.addEventListener('submit', onSearch);
 
 function onSearch(evt) {
   evt.preventDefault();
   console.log(evt.currentTarget.elements.searchQuery.value);
   searchQuery = evt.currentTarget.elements.searchQuery.value;
-
-    // const { searchQuery } = evt.currentTarget.elements;
+  
     getImages(searchQuery, currentPage).then(data => {
         console.log(data);
         if (!data.hits.length){
             Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+        }
+        else {
+          Notify.success(`Hooray! We found ${data.totalHits} images.`);
+          gallery.innerHTML = createMarkup(data.hits);
+          observer.observe(target);
+          
       }
-      gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-      observer.observe(target);
-        // gallery.innerHTML = createMarkup(data.hits)
-    }).catch(error => console.log(error));
-    
 
+    }).catch(error => console.log(error));
 }
 
-function getImages(value, page = 1) {
+async function getImages(value, page = 1) {
 
-    return fetch(`${BASE_URL}?key=${API_KEY}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`)
-        .then(resp => {
-            if (!resp.ok) {
-                throw new Error(resp.statusText);
-            }
-            return resp.json();
-        })
-    
-    
+    const resp = await fetch(`${BASE_URL}?key=${API_KEY}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
+  if (!resp.ok) {
+    throw new Error(resp.statusText);
+  }
+  return await resp.json();
+
+  //  const resp = await axios.get(`${BASE_URL}?key=${API_KEY}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
+  // if (!resp.ok) {
+  //   throw new Error(resp.statusText);
+  // }
+  // return await resp.json();
+  // return resp;
+
+
 }
 
 function createMarkup(arr) {
-    return arr.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads}) => `<div class="photo-card">
-  <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-  <div class="info">
+  return arr.map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) => `<div class="photo-card">
+    <div><a class="gallery-photo" href="${largeImageURL}"><img class="gallery-image" src="${webformatURL}" alt="${tags}" loading="lazy" /></a></div>
+    <div class="info">
     <p class="info-item">
       <b>Likes ${likes}</b>
     </p>
@@ -89,4 +101,5 @@ function createMarkup(arr) {
     </p>
   </div>
 </div>`).join('');
-    }
+}
+  
