@@ -12,7 +12,7 @@ const photoGallery = new SimpleLightbox('.gallery a');
 const BASE_URL = 'https://pixabay.com/api/';
 const API_KEY = '41243043-03fa0c09f0e0133208ded241a';
 let searchQuery;
-let currentPage = 10;
+let currentPage = 1;
 
 let options = {
   root: null,
@@ -23,17 +23,14 @@ let options = {
 let observer = new IntersectionObserver(onLoad, options);
 
 function onLoad(entries, observer) {
- 
+  photoGallery.refresh();
   entries.forEach((entry) => {
-    console.log(entry);
     if (entry.isIntersecting) {
+      
       currentPage += 1;
       getImages(searchQuery, currentPage).then(data => {
 
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-        photoGallery.refresh();
-        console.log(data.totalHits / 40);
-        console.log(currentPage);
         if (currentPage > data.totalHits / 40) {
           observer.unobserve(target);
         }
@@ -47,17 +44,18 @@ search.addEventListener('submit', onSearch);
 
 function onSearch(evt) {
   evt.preventDefault();
-  console.log(evt.currentTarget.elements.searchQuery.value);
   searchQuery = evt.currentTarget.elements.searchQuery.value;
   
-    getImages(searchQuery, currentPage).then(data => {
-        console.log(data);
-        if (!data.hits.length){
-            Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+  getImages(searchQuery, currentPage).then(data => {
+        // console.log(data);
+    if (!data.hits.length) {
+          gallery.innerHTML = "";
+          Notify.failure('Sorry, there are no images matching your search query. Please try again.');
         }
         else {
           Notify.success(`Hooray! We found ${data.totalHits} images.`);
           gallery.innerHTML = createMarkup(data.hits);
+          photoGallery.refresh();
           observer.observe(target);
           
       }
@@ -67,19 +65,14 @@ function onSearch(evt) {
 
 async function getImages(value, page = 1) {
 
-    const resp = await fetch(`${BASE_URL}?key=${API_KEY}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
-  if (!resp.ok) {
-    throw new Error(resp.statusText);
-  }
-  return await resp.json();
-
-  //  const resp = await axios.get(`${BASE_URL}?key=${API_KEY}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
+  //   const resp = await fetch(`${BASE_URL}?key=${API_KEY}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
   // if (!resp.ok) {
   //   throw new Error(resp.statusText);
   // }
   // return await resp.json();
-  // return resp;
 
+   const resp = await axios.get(`${BASE_URL}?key=${API_KEY}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
+   return await resp.data;
 
 }
 
