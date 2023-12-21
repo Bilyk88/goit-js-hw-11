@@ -15,7 +15,7 @@ let currentPage = 11;
 
 let options = {
   root: null,
-  rootMargin: "300px",
+  rootMargin: "500px",
   threshold: 1.0,
 };
 
@@ -32,8 +32,6 @@ async function onLoad(entries, observer) {
         gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
         photoGallery.refresh();
         if (currentPage > data.totalHits / 40) {
-          console.log(currentPage * 40);
-          console.log(data.totalHits);
           Notify.failure("We're sorry, but you've reached the end of search results.");       
           observer.unobserve(target);
       };      
