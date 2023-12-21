@@ -11,7 +11,7 @@ const target = document.querySelector('.js-guard');
 const photoGallery = new SimpleLightbox('.gallery a');
 
 let searchQuery;
-let currentPage = 11;
+let currentPage = 1;
 
 let options = {
   root: null,
@@ -44,7 +44,7 @@ search.addEventListener('submit', onSearch);
 async function onSearch(evt) {
   evt.preventDefault();
   searchQuery = evt.currentTarget.elements.searchQuery.value;
-  currentPage = 11;
+  currentPage = 1;
   const data = await getImages(searchQuery, currentPage);
   
     if (!data.hits.length) {
